@@ -356,35 +356,6 @@
 
     initApp();
 </script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <!-- Libreria per il trascinamento -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
-<!-- Script per attivare il trascinamento su ogni playlist -->
-<script>
-  function attivaTrascinamentoUniversale() {
-    // Questo script cerca tutti i contenitori con classe 'playlist-container'
-    // Se le tue liste hanno un nome classe diverso, cambialo qui sotto
-    const liste = document.querySelectorAll('.playlist-container');
-    
-    liste.forEach(lista => {
-      if (!lista.dataset.sortableAttivo) {
-        Sortable.create(lista, {
-          animation: 200,
-          delay: 100,
-          delayOnTouchOnly: true,
-          ghostClass: 'sorting-placeholder',
-          onEnd: function() {
-            console.log("Ordine aggiornato con successo!");
-          }
-        });
-        lista.dataset.sortableAttivo = "true";
-      }
-    });
-  }
-  // Attiva lo script all'avvio e ogni volta che la pagina cambia (per nuove playlist)
-  document.addEventListener('DOMContentLoaded', attivaTrascinamentoUniversale);
-  new MutationObserver(attivaTrascinamentoUniversale).observe(document.body, { childList: true, subtree: true });
-</script>
 </body>
 </html>
