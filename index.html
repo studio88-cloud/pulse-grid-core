@@ -2,9 +2,8 @@
 <html lang="it">
 <head>
     <link rel="apple-touch-icon" href="icon.png">
-
-<link rel="icon" type="image/png" href="icon.png">
-<meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" type="image/png" href="icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -46,9 +45,10 @@
 
         .live-display.flash-full { background: var(--accent); border-color: #fff; }
         .live-display.flash-full * { color: #000 !important; }
+        
         .live-display::before, .live-display::after {
             content: ''; position: absolute; top: 0; width: 14px; height: 100%;
-            background: var(--accent); opacity: 0; transition: 0.07s; border-radius: 35px;
+            background: var(--accent); opacity: 0; transition: 0.07s; border-radius: 35px; z-index: 1;
         }
         .live-display::before { left: -2px; } .live-display::after { right: -2px; }
         .live-display.flash-side::before, .live-display.flash-side::after { opacity: 1; }
@@ -62,7 +62,6 @@
         .color-box { width: 26px; height: 26px; border-radius: 7px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
         .color-box.active { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
 
-        /* LAB PANEL */
         #lab-panel {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--card); border-radius: 40px; padding: 20px;
@@ -75,8 +74,10 @@
         .playlist-ctrl { display: flex; gap: 5px; margin-top: 8px; }
         .pl-btn { flex: 1; padding: 5px; font-size: 0.5rem; font-family: 'Orbitron'; cursor: pointer; border-radius: 5px; border: 1px solid #444; background: #222; color: #ccc; }
         #song-list-ui { flex-grow: 1; overflow-y: auto; text-align: left; margin-top: 10px; padding-right: 5px; }
-        .song-item { background: #111; padding: 12px; border-radius: 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; border: 1px solid #222; }
+        .song-item { background: #111; padding: 12px; border-radius: 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; border: 1px solid #222; cursor: grab; }
+        .song-item:active { cursor: grabbing; }
         .edit-btn { color: var(--accent); background: none; border: 1px solid var(--accent); padding: 4px 8px; border-radius: 5px; font-size: 0.55rem; font-family: 'Orbitron'; cursor: pointer; }
+        .sorting-placeholder { opacity: 0.4; background: var(--accent) !important; border: 1px dashed #fff; }
     </style>
 </head>
 <body>
@@ -131,9 +132,11 @@
             </select>
         </div>
         <button id="save-btn" onclick="addSong()" style="width:100%; padding:12px; background:var(--accent); border:none; border-radius:10px; font-family:Orbitron; font-weight:900; cursor:pointer;">SALVA BRANO</button>
-        <div id="song-list-ui"></div>
+        <div id="song-list-ui" class="playlist-container"></div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <script>
     let db = JSON.parse(localStorage.getItem('pulse_db')) || {
@@ -150,8 +153,39 @@
 
     let isPlaying = false, audioCtx = null, timerID = null, nextTickTime = 0, currentBeat = 0, currentIndex = 0, editIndex = -1, tapTimes = [];
 
-    function initApp() { renderPlaylistSelect(); renderColorPalette(); setThemeColor(db.themeColor); updateUI(); }
+    function initApp() { renderPlaylistSelect(); renderColorPalette(); setThemeColor(db.themeColor); updateUI(); initUniversalSortable(); }
     function saveDB() { localStorage.setItem('pulse_db', JSON.stringify(db)); }
+
+    function initUniversalSortable() {
+        const liste = document.querySelectorAll('.playlist-container');
+        liste.forEach(lista => {
+            if (!lista.dataset.sortableAttivo) {
+                Sortable.create(lista, {
+                    animation: 200, delay: 100, delayOnTouchOnly: true, ghostClass: 'sorting-placeholder',
+                    onEnd: function() {
+                        const currentSongs = [];
+                        const items = lista.querySelectorAll('.song-item');
+                        const fullList = db.playlists[db.activeList];
+                        items.forEach(item => {
+                            const idx = parseInt(item.getAttribute('data-index'));
+                            currentSongs.push(fullList[idx]);
+                        });
+                        db.playlists[db.activeList] = currentSongs;
+                        saveDB(); renderLabList(); updateUI();
+                    }
+                });
+                lista.dataset.sortableAttivo = "true";
+            }
+        });
+    }
+
+    function setThemeColor(hex) {
+        db.themeColor = hex;
+        document.documentElement.style.setProperty('--accent', hex);
+        const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+        document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
+        saveDB(); renderColorPalette();
+    }
 
     function renderColorPalette() {
         const palette = document.getElementById('color-palette');
@@ -166,24 +200,9 @@
         });
     }
 
-    function setThemeColor(hex) {
-        db.themeColor = hex;
-        document.documentElement.style.setProperty('--accent', hex);
-        const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-        document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
-        saveDB(); renderColorPalette();
-    }
-
     function updateUI() {
         const list = db.playlists[db.activeList];
-        if(!list || list.length === 0) {
-            document.getElementById('song-title').innerText = "EMPTY LIST";
-            document.getElementById('bpm-val').innerText = "--";
-            document.getElementById('time-sig-display').innerText = "--";
-            document.getElementById('next-song').innerText = "--";
-            document.getElementById('beat-counter').innerHTML = '';
-            return;
-        }
+        if(!list || list.length === 0) return;
         const s = list[currentIndex];
         document.getElementById('song-title').innerText = s.title;
         document.getElementById('bpm-val').innerText = s.bpm;
@@ -195,75 +214,38 @@
         for(let i=0; i<dots; i++) { const d = document.createElement('div'); d.className = 'beat-dot'; d.id = `dot-${i}`; cnt.appendChild(d); }
     }
 
-    // --- FUNZIONI LAB RIPRISTINATE ---
     function renderLabList() {
         const ui = document.getElementById('song-list-ui');
         ui.innerHTML = '';
         const currentSongs = db.playlists[db.activeList];
         if(!currentSongs) return;
-        
         currentSongs.forEach((s, i) => {
             const item = document.createElement('div');
             item.className = 'song-item';
+            item.setAttribute('data-index', i);
             item.innerHTML = `<div>${s.title} <span style="color:var(--accent)">${s.bpm}</span></div>
-                <div><button class="edit-btn" onclick="editSong(${i})">EDIT</button>
-                <button style="color:#f04; background:none; border:none; margin-left:10px; font-weight:bold; cursor:pointer;" onclick="deleteSong(${i})">X</button></div>`;
+                <div><button class="edit-btn" onclick="event.stopPropagation(); editSong(${i})">EDIT</button>
+                <button style="color:#f04; background:none; border:none; margin-left:10px; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); deleteSong(${i})">X</button></div>`;
             ui.appendChild(item);
         });
     }
 
     function addSong() {
-        const t = document.getElementById('new-title').value.toUpperCase() || "UNTITLED";
-        const b = parseInt(document.getElementById('new-bpm').value) || 120;
-        const n = parseInt(document.getElementById('new-num').value) || 4;
-        const d = parseInt(document.getElementById('new-den').value) || 4;
-        
-        if(editIndex > -1) {
-            db.playlists[db.activeList][editIndex] = { title:t, bpm:b, num:n, den:d };
-        } else {
-            db.playlists[db.activeList].push({ title:t, bpm:b, num:n, den:d });
-        }
-        
-        saveDB();
-        resetLab();
-        renderLabList();
-        updateUI();
+        const t = document.getElementById('new-title').value.toUpperCase() || "UNTITLED", b = parseInt(document.getElementById('new-bpm').value) || 120, n = parseInt(document.getElementById('new-num').value) || 4, d = parseInt(document.getElementById('new-den').value) || 4;
+        if(editIndex > -1) db.playlists[db.activeList][editIndex] = { title:t, bpm:b, num:n, den:d };
+        else db.playlists[db.activeList].push({ title:t, bpm:b, num:n, den:d });
+        saveDB(); resetLab(); renderLabList(); updateUI();
     }
 
     function editSong(i) {
-        editIndex = i;
-        const s = db.playlists[db.activeList][i];
-        document.getElementById('new-title').value = s.title;
-        document.getElementById('new-bpm').value = s.bpm;
-        document.getElementById('new-num').value = s.num;
-        document.getElementById('new-den').value = s.den;
-        document.getElementById('save-btn').innerText = "UPDATE";
-        document.getElementById('new-title').focus();
+        editIndex = i; const s = db.playlists[db.activeList][i];
+        document.getElementById('new-title').value = s.title; document.getElementById('new-bpm').value = s.bpm; document.getElementById('new-num').value = s.num; document.getElementById('new-den').value = s.den;
+        document.getElementById('save-btn').innerText = "UPDATE"; document.getElementById('new-title').focus();
     }
 
-    function deleteSong(i) {
-        if(confirm("Delete this file?")) {
-            db.playlists[db.activeList].splice(i, 1);
-            saveDB();
-            renderLabList();
-            updateUI();
-        }
-    }
-
-    function resetLab() {
-        editIndex = -1;
-        document.getElementById('save-btn').innerText = "SAVE";
-        document.getElementById('new-title').value = "";
-        document.getElementById('new-bpm').value = "";
-        tapTimes = [];
-    }
-
-    function toggleLab() { 
-        document.getElementById('lab-panel').classList.toggle('active'); 
-        if(document.getElementById('lab-panel').classList.contains('active')) {
-            renderLabList();
-        }
-    }
+    function deleteSong(i) { if(confirm("Delete?")) { db.playlists[db.activeList].splice(i, 1); saveDB(); renderLabList(); updateUI(); } }
+    function resetLab() { editIndex = -1; document.getElementById('save-btn').innerText = "SAVE"; document.getElementById('new-title').value = ""; document.getElementById('new-bpm').value = ""; tapTimes = []; }
+    function toggleLab() { document.getElementById('lab-panel').classList.toggle('active'); if(document.getElementById('lab-panel').classList.contains('active')) { renderLabList(); initUniversalSortable(); } }
 
     function renderPlaylistSelect() {
         const sel = document.getElementById('pl-select'); sel.innerHTML = '';
@@ -274,42 +256,15 @@
         document.getElementById('current-playlist-name').innerText = db.activeList;
     }
 
-    function switchPlaylist(name) { 
-        if(isPlaying) togglePlay(); 
-        db.activeList = name; 
-        currentIndex = 0; 
-        saveDB(); 
-        renderPlaylistSelect(); 
-        updateUI(); 
-        renderLabList(); 
-    }
-
-    function createNewPlaylist() {
-        const name = prompt("New Playlist:").toUpperCase();
-        if(name && !db.playlists[name]) {
-            db.playlists[name] = [];
-            switchPlaylist(name);
-        }
-    }
-
-    function deleteCurrentPlaylist() {
-        const keys = Object.keys(db.playlists);
-        if(keys.length <= 1) return alert("Can't delete last playlist");
-        if(confirm(`Eliminare la playlist ${db.activeList}?`)) {
-            delete db.playlists[db.activeList];
-            switchPlaylist(Object.keys(db.playlists)[0]);
-        }
-    }
+    function switchPlaylist(name) { if(isPlaying) togglePlay(); db.activeList = name; currentIndex = 0; saveDB(); renderPlaylistSelect(); updateUI(); renderLabList(); }
+    function createNewPlaylist() { const name = prompt("New Playlist:").toUpperCase(); if(name && !db.playlists[name]) { db.playlists[name] = []; switchPlaylist(name); } }
+    function deleteCurrentPlaylist() { if(Object.keys(db.playlists).length <= 1) return; if(confirm(`Eliminare ${db.activeList}?`)) { delete db.playlists[db.activeList]; switchPlaylist(Object.keys(db.playlists)[0]); } }
 
     function handleTap() {
         const now = Date.now(); tapTimes.push(now); if (tapTimes.length > 5) tapTimes.shift();
-        if (tapTimes.length > 1) {
-            const avg = (tapTimes[tapTimes.length-1] - tapTimes[0]) / (tapTimes.length - 1);
-            document.getElementById('new-bpm').value = Math.round(60000 / avg);
-        }
+        if (tapTimes.length > 1) { const avg = (tapTimes[tapTimes.length-1] - tapTimes[0]) / (tapTimes.length - 1); document.getElementById('new-bpm').value = Math.round(60000 / avg); }
     }
 
-    // --- ENGINE METRONOMO ---
     function togglePlay() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (isPlaying) { isPlaying = false; clearTimeout(timerID); } 
@@ -332,19 +287,38 @@
 
     function playClick(t, b, s) {
         const osc = audioCtx.createOscillator(); const env = audioCtx.createGain();
-        let freq = 500, vol = 0.1, isAccent = (b === 0);
-        if (s.den === 8 && b % 3 === 0) isAccent = true;
-        if (s.den === 16 && b % 4 === 0) isAccent = true;
-        freq = (b === 0) ? 1200 : (isAccent ? 800 : 400);
-        vol = (b === 0) ? 0.4 : (isAccent ? 0.2 : 0.05);
+        
+        let isMain = false; // Illuminazione Completa
+        let isSide = false; // Illuminazione Laterale
+
+        if (s.den === 4) {
+            isMain = true; // Ogni quarto flash completo
+        } else if (s.den === 8) {
+            if (b % 3 === 0) isMain = true; else isSide = true; // Uno ogni tre principale, altri laterali
+        } else if (s.den === 16) {
+            if (b % 4 === 0) isMain = true; else isSide = true; // Uno ogni quattro principale, altri laterali
+        }
+
+        let freq = b === 0 ? 1200 : (isMain ? 800 : 400);
+        let vol = b === 0 ? 0.4 : (isMain ? 0.2 : 0.05);
+
         osc.frequency.setValueAtTime(freq, t); env.gain.setValueAtTime(vol, t);
         env.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
         osc.connect(env); env.connect(audioCtx.destination);
         osc.start(t); osc.stop(t + 0.05);
+
         setTimeout(() => {
             if (!isPlaying) return;
             const d = document.getElementById('main-display');
-            if (isAccent) { d.classList.add(b===0?'flash-full':'flash-side'); setTimeout(()=>d.classList.remove('flash-full','flash-side'), 60); }
+            
+            if (isMain) {
+                d.classList.add('flash-full'); 
+                setTimeout(() => d.classList.remove('flash-full'), 60);
+            } else if (isSide) {
+                d.classList.add('flash-side'); 
+                setTimeout(() => d.classList.remove('flash-side'), 60);
+            }
+            
             let vIdx = s.den === 8 ? Math.floor(b/3) : (s.den === 16 ? Math.floor(b/4) : b);
             document.querySelectorAll('.beat-dot').forEach(dot => dot.classList.remove('active'));
             if(document.getElementById(`dot-${vIdx}`)) document.getElementById(`dot-${vIdx}`).classList.add('active');
@@ -355,6 +329,7 @@
     function prevSong() { if (currentIndex > 0) { currentIndex--; if(isPlaying) togglePlay(); updateUI(); } }
 
     initApp();
+    new MutationObserver(initUniversalSortable).observe(document.body, { childList: true, subtree: true });
 </script>
 
 </body>
