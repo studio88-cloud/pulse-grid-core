@@ -116,7 +116,7 @@
                 <button class="pl-btn" style="color:#f04" onclick="deleteCurrentPlaylist()">DELETE LIST</button>
             </div>
         </div>
-        <input type="text" id="new-title" class="lab-input" placeholder="TITOLO BRANO">
+        <input type="text" id="new-title" class="lab-input" placeholder="TITLE">
         <div class="row">
             <input type="number" id="new-bpm" class="lab-input" placeholder="BPM" style="margin:0; flex:2;">
             <button class="pl-btn" style="height:35px;" onclick="handleTap()">TAP</button>
@@ -237,12 +237,12 @@
         document.getElementById('new-bpm').value = s.bpm;
         document.getElementById('new-num').value = s.num;
         document.getElementById('new-den').value = s.den;
-        document.getElementById('save-btn').innerText = "AGGIORNA BRANO";
+        document.getElementById('save-btn').innerText = "UPDATE";
         document.getElementById('new-title').focus();
     }
 
     function deleteSong(i) {
-        if(confirm("Eliminare questo brano?")) {
+        if(confirm("Delete this file?")) {
             db.playlists[db.activeList].splice(i, 1);
             saveDB();
             renderLabList();
@@ -252,7 +252,7 @@
 
     function resetLab() {
         editIndex = -1;
-        document.getElementById('save-btn').innerText = "SALVA BRANO";
+        document.getElementById('save-btn').innerText = "SAVE";
         document.getElementById('new-title').value = "";
         document.getElementById('new-bpm').value = "";
         tapTimes = [];
@@ -285,7 +285,7 @@
     }
 
     function createNewPlaylist() {
-        const name = prompt("Nome nuova Playlist:").toUpperCase();
+        const name = prompt("New Playlist:").toUpperCase();
         if(name && !db.playlists[name]) {
             db.playlists[name] = [];
             switchPlaylist(name);
@@ -294,7 +294,7 @@
 
     function deleteCurrentPlaylist() {
         const keys = Object.keys(db.playlists);
-        if(keys.length <= 1) return alert("Impossibile eliminare l'ultima playlist.");
+        if(keys.length <= 1) return alert("Can't delete last playlist");
         if(confirm(`Eliminare la playlist ${db.activeList}?`)) {
             delete db.playlists[db.activeList];
             switchPlaylist(Object.keys(db.playlists)[0]);
