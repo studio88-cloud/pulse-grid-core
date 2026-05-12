@@ -49,7 +49,7 @@
         .playlist-ctrl { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
         .pl-btn { flex: 1; padding: 8px; font-size: 0.55rem; font-family: 'Orbitron'; cursor: pointer; border-radius: 5px; border: 1px solid #444; background: #222; color: #ccc; min-width: 70px; }
         #song-list-ui { flex-grow: 1; overflow-y: auto; margin-top: 10px; }
-        .song-item { 
+      .song-item { 
     background: #111; 
     padding: 10px; 
     border-radius: 10px; 
@@ -59,14 +59,15 @@
     align-items: center; 
     font-size: 0.7rem; 
     border: 1px solid #222;
-    touch-action: none;
     user-select: none;
+    transition: transform 0.1s;
 }
 
 .song-item.dragging {
     opacity: 0.5;
     background: var(--accent) !important;
     border: 2px dashed #fff;
+    transform: scale(1.02);
 }
         .edit-btn { 
     background: #000; 
@@ -258,10 +259,12 @@ function renderLabList() {
     const playlist = db.playlists[db.activeList];
     if(!playlist) return;
 
+    let longPressTimer;
+    let isDragging = false;
+
     playlist.forEach((s, i) => {
         const item = document.createElement('div');
         item.className = 'song-item';
-        item.draggable = true;
         item.dataset.index = i;
         
         item.innerHTML = `
@@ -274,15 +277,24 @@ function renderLabList() {
                 <span style="color: #f04; cursor: pointer; font-family: 'Orbitron'; font-weight: bold; font-size: 0.8rem;" onclick="deleteSong(${i})">X</span>
             </div>`;
 
+        item.draggable = true;
         item.addEventListener('dragstart', () => item.classList.add('dragging'));
         item.addEventListener('dragend', () => handleDrop());
-
-        item.addEventListener('touchstart', () => {
-            item.classList.add('dragging');
+    
+        item.addEventListener('touchstart', (e) => {
+            longPressTimer = setTimeout(() => {
+                isDragging = true;
+                item.classList.add('dragging');
+                if (window.navigator.vibrate) window.navigator.vibrate(50); 
+            }, 250); 
         }, {passive: true});
 
         item.addEventListener('touchmove', (e) => {
-            e.preventDefault();
+            if (!isDragging) {
+                clearTimeout(longPressTimer);
+                return;
+            }
+            if (e.cancelable) e.preventDefault(); 
             const touch = e.touches[0];
             const nextSibling = getDragAfterElement(ui, touch.clientY);
             const draggingItem = ui.querySelector('.dragging');
@@ -293,11 +305,38 @@ function renderLabList() {
             }
         }, {passive: false});
 
-        item.addEventListener('touchend', () => handleDrop());
+        item.addEventListener('touchend', () => {
+            clearTimeout(longPressTimer);
+            if (isDragging) {
+                isDragging = false;
+                handleDrop();
+            }
+        });
 
         ui.appendChild(item);
     });
 
+    function handleDrop() {
+        const draggingItem = ui.querySelector('.dragging');
+        if (draggingItem) draggingItem.classList.remove('dragging');
+        const items = [...ui.querySelectorAll('.song-item')];
+        const newOrder = items.map(el => playlist[parseInt(el.dataset.index)]);
+        db.playlists[db.activeList] = newOrder;
+        saveDB();
+        updateUI();
+        renderLabList();
+    }
+
+    ui.addEventListener('dragover', e => {
+        e.preventDefault();
+        const nextSibling = getDragAfterElement(ui, e.clientY);
+        const draggingItem = ui.querySelector('.dragging');
+        if (draggingItem) {
+            if (nextSibling == null) ui.appendChild(draggingItem);
+            else ui.insertBefore(draggingItem, nextSibling);
+        }
+    });
+}
     function handleDrop() {
         const draggingItem = ui.querySelector('.dragging');
         if (draggingItem) draggingItem.classList.remove('dragging');
