@@ -186,6 +186,7 @@
     const env = audioCtx.createGain();
     
     let isAccent = (b === 0);
+    if (s.den === 4) isAccent = true;
     if (s.den === 8 && b % 3 === 0) isAccent = true;
     if (s.den === 16 && b % 4 === 0) isAccent = true;
 
