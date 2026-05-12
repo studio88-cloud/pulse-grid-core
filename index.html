@@ -105,7 +105,7 @@
         </div>
         <button id="save-btn" onclick="addSong()" style="width:100%; padding:12px; background:var(--accent); border:none; border-radius:10px; font-family:Orbitron; color:#000; font-weight:900; cursor:pointer;">SAVE SONG</button>
         <div class="playlist-ctrl" style="margin-top:10px;">
-            <button class="pl-btn" style="color:#00e676;" onclick="shareCurrentPlaylist()">SHARE</button>
+            <button class="pl-btn" style="color:#fff;" onclick="shareCurrentPlaylist()">SHARE</button>
             <button class="pl-btn" onclick="exportData()">BACKUP</button>
             <button class="pl-btn" onclick="document.getElementById('import-file').click()">IMPORT</button>
             <input type="file" id="import-file" style="display:none" onchange="importData(event)">
@@ -225,7 +225,20 @@ function renderLabList() {
     function prevSong() { if(currentIndex > 0) { currentIndex--; if(isPlaying) { nextTickTime = audioCtx.currentTime; currentBeat = 0; } updateUI(); } }
     function handleTap() { const now = Date.now(); tapTimes.push(now); if (tapTimes.length > 5) tapTimes.shift(); if (tapTimes.length > 1) { const avg = (tapTimes[tapTimes.length-1] - tapTimes[0]) / (tapTimes.length - 1); document.getElementById('new-bpm').value = Math.round(60000 / avg); } }
     function exportData() { download(db, "BACKUP.json"); }
-    function shareCurrentPlaylist() { download({type:"PULSE_SHARE", name:db.activeList, songs:db.playlists[db.activeList]}, "SHARE.json"); }
+    function shareCurrentPlaylist() {
+    const fileName = `SHARE_${db.activeList.replace(/\s+/g, '_')}.json`;
+    
+    const data = {
+        type: "PULSE_SHARE", 
+        name: db.activeList, 
+        songs: db.playlists[db.activeList]
+    };
+    
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:'application/json'}));
+    a.download = fileName; 
+    a.click();
+}
     function download(data, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:'application/json'})); a.download = name; a.click(); }
     function importData(e) { const reader = new FileReader(); reader.onload = (ev) => { const imp = JSON.parse(ev.target.result); if(imp.type === "PULSE_SHARE") { let n = imp.name; if(db.playlists[n]) n+="_NEW"; db.playlists[n]=imp.songs; db.activeList=n; } else { db = imp; } saveDB(); location.reload(); }; reader.readAsText(e.target.files[0]); }
     
