@@ -98,10 +98,10 @@
     </div>
 
     <div class="controls-row">
-        <button class="nav-btn" onclick="prevSong()">PREV</button>
-        <button id="play-stop" class="play-btn" onclick="togglePlay()">ENGAGE</button>
-        <button class="nav-btn" onclick="nextSong()">NEXT</button>
-    </div>
+    <button id="btn-prev" class="nav-btn">PREV</button>
+    <button id="play-stop" class="play-btn" onclick="togglePlay()">IGNITE</button>
+    <button id="btn-next" class="nav-btn">NEXT</button>
+</div>
 
     <div class="color-palette" id="color-palette"></div>
 
@@ -367,6 +367,34 @@
 
     initApp();
     new MutationObserver(initUniversalSortable).observe(document.body, { childList: true, subtree: true });
+
+    let repeatInterval = null;
+
+function startRepeat(action) {
+    if (isPlaying) {
+        action(); // Se il metronomo suona, esegui solo un cambio singolo (medley mode)
+        return;
+    }
+    action(); // Esegue il primo cambio immediato
+    repeatInterval = setInterval(action, 200); // Poi ripete ogni 200ms
+}
+
+function stopRepeat() {
+    clearInterval(repeatInterval);
+    repeatInterval = null;
+}
+
+const setupNavBtn = (id, action) => {
+    const btn = document.getElementById(id);
+    btn.addEventListener('mousedown', () => startRepeat(action));
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); startRepeat(action); });
+    btn.addEventListener('mouseup', stopRepeat);
+    btn.addEventListener('mouseleave', stopRepeat);
+    btn.addEventListener('touchend', stopRepeat);
+};
+
+setupNavBtn('btn-prev', prevSong);
+setupNavBtn('btn-next', nextSong);
 </script>
 
 </body>
