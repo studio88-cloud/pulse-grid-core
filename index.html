@@ -132,12 +132,13 @@
             </select>
         </div>
         <button id="save-btn" onclick="addSong()" style="width:100%; padding:12px; background:var(--accent); border:none; border-radius:10px; font-family:Orbitron; font-weight:900; color:#000; cursor:pointer;">SAVE</button>
-        <div id="song-list-ui" class="playlist-container"></div>
-        <div class="playlist-ctrl" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 15px;">
-    <button class="pl-btn" onclick="exportData()">ESPORTA BACKUP</button>
-    <button class="pl-btn" onclick="document.getElementById('import-file').click()">IMPORTA BACKUP</button>
+       <div class="playlist-ctrl" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 15px; gap: 5px; flex-wrap: wrap;">
+    <button class="pl-btn" style="color: #00e676; border-color: #00e676;" onclick="shareCurrentPlaylist()">SHARE LIST</button>
+    <button class="pl-btn" onclick="exportData()">EXPORT BACKUP</button>
+    <button class="pl-btn" onclick="document.getElementById('import-file').click()">IMPORT FILE</button>
     <input type="file" id="import-file" style="display:none" onchange="importData(event)">
 </div>
+    
     </div>
 </div>
 
@@ -172,27 +173,54 @@ function exportData() {
     linkElement.click();
 }
 
+function shareCurrentPlaylist() {
+    const listToShare = {
+        type: "PULSE_SHARE",
+        name: db.activeList,
+        songs: db.playlists[db.activeList]
+    };
+    const dataStr = JSON.stringify(listToShare);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const link = document.createElement('a');
+    link.setAttribute('href', dataUri);
+    link.setAttribute('download', `SHARE_${db.activeList}.json`);
+    link.click();
+}
+
+function processFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const imported = JSON.parse(e.target.result);
+            
+            if (imported.type === "PULSE_SHARE") {
+                if (confirm(`Vuoi aggiungere la playlist "${imported.name}" a quelle esistenti?`)) {
+                    let finalName = imported.name;
+                    if (db.playlists[finalName]) {
+                        finalName = imported.name + "_NEW";
+                    }
+                    db.playlists[finalName] = imported.songs;
+                    db.activeList = finalName;
+                    saveDB();
+                    location.reload();
+                }
+            } 
+            else if (imported.playlists) {
+                if (confirm("Attenzione: questo è un BACKUP TOTALE. Sovrascrivere tutto il database?")) {
+                    db = imported;
+                    saveDB();
+                    location.reload();
+                }
+            }
+        } catch (err) { alert("File non valido"); }
+    };
+    reader.readAsText(file);
+}
+
 function importData(event) {
     const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const importedDb = JSON.parse(e.target.result);
-            // Verifica base che il file sia corretto
-            if (importedDb.playlists && importedDb.activeList) {
-                if (confirm("Attenzione: l'importazione sovrascriverà tutte le playlist attuali. Procedere?")) {
-                    db = importedDb;
-                    saveDB();
-                    location.reload(); // Ricarica l'app per applicare i nuovi dati
-                }
-            } else {
-                alert("File di backup non valido.");
-            }
-        } catch (err) {
-            alert("Errore durante l'importazione: " + err);
-        }
+    if (file) processFile(file);
+}
     };
     reader.readAsText(file);
 }
