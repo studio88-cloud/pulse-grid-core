@@ -54,6 +54,11 @@
     background: var(--accent);
     color: #000;
 }
+        .song-item.dragging {
+    opacity: 0.5;
+    background: var(--accent);
+    border: 2px dashed #fff;
+}
     </style>
 </head>
 <body>
@@ -200,13 +205,17 @@
 function renderLabList() {
     const ui = document.getElementById('song-list-ui');
     ui.innerHTML = '';
-    if(!db.playlists[db.activeList]) return;
+    const playlist = db.playlists[db.activeList];
+    if(!playlist) return;
 
-    db.playlists[db.activeList].forEach((s, i) => {
+    playlist.forEach((s, i) => {
         const item = document.createElement('div');
         item.className = 'song-item';
+        item.draggable = true; 
+        item.dataset.index = i;
+        
         item.innerHTML = `
-            <div style="font-family: 'Inter';">
+            <div style="font-family: 'Inter'; pointer-events: none;">
                 <span style="color:#eee; font-weight:bold;">${s.title}</span> 
                 <span style="color:var(--accent); margin-left:5px;">${s.bpm}</span>
             </div>
@@ -214,7 +223,31 @@ function renderLabList() {
                 <button class="edit-btn" onclick="editSong(${i})">EDIT</button>
                 <span style="color: #f04; cursor: pointer; font-family: 'Orbitron'; font-weight: bold; font-size: 0.8rem;" onclick="deleteSong(${i})">X</span>
             </div>`;
+
+        item.addEventListener('dragstart', () => item.classList.add('dragging'));
+        item.addEventListener('dragend', () => item.classList.remove('dragging'));
+
         ui.appendChild(item);
+    });
+
+
+    ui.addEventListener('dragover', e => {
+        e.preventDefault();
+        const draggingItem = ui.querySelector('.dragging');
+        const siblings = [...ui.querySelectorAll('.song-item:not(.dragging)')];
+        let nextSibling = siblings.find(sibling => {
+            return e.clientY <= sibling.getBoundingClientRect().top + sibling.getBoundingClientRect().height / 2;
+        });
+        ui.insertBefore(draggingItem, nextSibling);
+    });
+
+    ui.addEventListener('drop', () => {
+        const newOrder = [...ui.querySelectorAll('.song-item')].map(item => {
+            return playlist[item.dataset.index];
+        });
+        db.playlists[db.activeList] = newOrder;
+        saveDB();
+        updateUI(); 
     });
 }
     function toggleLab() { document.getElementById('lab-panel').classList.toggle('active'); renderLabList(); }
