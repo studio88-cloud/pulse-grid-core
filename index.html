@@ -330,8 +330,28 @@
         }, (t - audioCtx.currentTime) * 1000);
     }
 
-    function nextSong() { if (currentIndex < db.playlists[db.activeList].length-1) { currentIndex++; if(isPlaying) togglePlay(); updateUI(); } }
-    function prevSong() { if (currentIndex > 0) { currentIndex--; if(isPlaying) togglePlay(); updateUI(); } }
+    function nextSong() { 
+    const l = db.playlists[db.activeList]; 
+    if (l && currentIndex < l.length - 1) { 
+        currentIndex++; 
+        if (isPlaying) {
+            nextTickTime = audioCtx.currentTime; 
+            currentBeat = 0; 
+        }
+        updateUI(); 
+    } 
+}
+    function prevSong() { 
+    if (currentIndex > 0) { 
+        currentIndex--; 
+        if (isPlaying) {
+            const l = db.playlists[db.activeList];
+            nextTickTime = audioCtx.currentTime; 
+            currentBeat = 0; 
+        }
+        updateUI(); 
+    } 
+}
 
     initApp();
     new MutationObserver(initUniversalSortable).observe(document.body, { childList: true, subtree: true });
