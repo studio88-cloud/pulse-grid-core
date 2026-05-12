@@ -37,8 +37,26 @@
         .playlist-ctrl { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
         .pl-btn { flex: 1; padding: 8px; font-size: 0.55rem; font-family: 'Orbitron'; cursor: pointer; border-radius: 5px; border: 1px solid #444; background: #222; color: #ccc; min-width: 70px; }
         #song-list-ui { flex-grow: 1; overflow-y: auto; margin-top: 10px; }
-        .song-item { background: #111; padding: 10px; border-radius: 10px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; border: 1px solid #222; }
-   .edit-btn { 
+        .song-item { 
+    background: #111; 
+    padding: 10px; 
+    border-radius: 10px; 
+    margin-bottom: 5px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    font-size: 0.7rem; 
+    border: 1px solid #222;
+    touch-action: none;
+    user-select: none;
+}
+
+.song-item.dragging {
+    opacity: 0.5;
+    background: var(--accent) !important;
+    border: 2px dashed #fff;
+}
+        .edit-btn { 
     background: #000; 
     border: 1px solid var(--accent); 
     color: var(--accent); 
@@ -211,11 +229,11 @@ function renderLabList() {
     playlist.forEach((s, i) => {
         const item = document.createElement('div');
         item.className = 'song-item';
-        item.draggable = true; 
+        item.draggable = true;
         item.dataset.index = i;
         
         item.innerHTML = `
-            <div style="font-family: 'Inter'; pointer-events: none;">
+            <div style="pointer-events: none;">
                 <span style="color:#eee; font-weight:bold;">${s.title}</span> 
                 <span style="color:var(--accent); margin-left:5px;">${s.bpm}</span>
             </div>
@@ -225,30 +243,63 @@ function renderLabList() {
             </div>`;
 
         item.addEventListener('dragstart', () => item.classList.add('dragging'));
-        item.addEventListener('dragend', () => item.classList.remove('dragging'));
+        item.addEventListener('dragend', () => handleDrop());
+
+        item.addEventListener('touchstart', () => {
+            item.classList.add('dragging');
+        }, {passive: true});
+
+        item.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const nextSibling = getDragAfterElement(ui, touch.clientY);
+            const draggingItem = ui.querySelector('.dragging');
+            if (nextSibling == null) {
+                ui.appendChild(draggingItem);
+            } else {
+                ui.insertBefore(draggingItem, nextSibling);
+            }
+        }, {passive: false});
+
+        item.addEventListener('touchend', () => handleDrop());
 
         ui.appendChild(item);
     });
 
+    function handleDrop() {
+        const draggingItem = ui.querySelector('.dragging');
+        if (draggingItem) draggingItem.classList.remove('dragging');
+        const items = [...ui.querySelectorAll('.song-item')];
+        const newOrder = items.map(item => playlist[parseInt(item.dataset.index)]);
+        db.playlists[db.activeList] = newOrder;
+        saveDB();
+        updateUI();
+        renderLabList();
+    }
 
     ui.addEventListener('dragover', e => {
         e.preventDefault();
+        const nextSibling = getDragAfterElement(ui, e.clientY);
         const draggingItem = ui.querySelector('.dragging');
-        const siblings = [...ui.querySelectorAll('.song-item:not(.dragging)')];
-        let nextSibling = siblings.find(sibling => {
-            return e.clientY <= sibling.getBoundingClientRect().top + sibling.getBoundingClientRect().height / 2;
-        });
-        ui.insertBefore(draggingItem, nextSibling);
+        if (nextSibling == null) {
+            ui.appendChild(draggingItem);
+        } else {
+            ui.insertBefore(draggingItem, nextSibling);
+        }
     });
+}
 
-    ui.addEventListener('drop', () => {
-        const newOrder = [...ui.querySelectorAll('.song-item')].map(item => {
-            return playlist[item.dataset.index];
-        });
-        db.playlists[db.activeList] = newOrder;
-        saveDB();
-        updateUI(); 
-    });
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.song-item:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
     function toggleLab() { document.getElementById('lab-panel').classList.toggle('active'); renderLabList(); }
     function switchPlaylist(n) { db.activeList = n; currentIndex = 0; saveDB(); updateUI(); renderLabList(); }
