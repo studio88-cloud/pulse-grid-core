@@ -197,7 +197,26 @@
 
     function editSong(i) { editIndex = i; const s = db.playlists[db.activeList][i]; document.getElementById('new-title').value = s.title; document.getElementById('new-bpm').value = s.bpm; document.getElementById('new-num').value = s.num; document.getElementById('new-den').value = s.den; document.getElementById('save-btn').innerText = "UPDATE"; }
     function deleteSong(i) { if(confirm("Elimina?")) { db.playlists[db.activeList].splice(i,1); saveDB(); renderLabList(); updateUI(); } }
-    function renderLabList() { const ui = document.getElementById('song-list-ui'); ui.innerHTML = ''; db.playlists[db.activeList].forEach((s, i) => { const item = document.createElement('div'); item.className = 'song-item'; item.innerHTML = `<div>${s.title} <b>${s.bpm}</b></div><div><button onclick="editSong(${i})">ED</button><button onclick="deleteSong(${i})" style="color:red">X</button></div>`; ui.appendChild(item); }); }
+function renderLabList() {
+    const ui = document.getElementById('song-list-ui');
+    ui.innerHTML = '';
+    if(!db.playlists[db.activeList]) return;
+
+    db.playlists[db.activeList].forEach((s, i) => {
+        const item = document.createElement('div');
+        item.className = 'song-item';
+        item.innerHTML = `
+            <div style="font-family: 'Inter';">
+                <span style="color:#eee; font-weight:bold;">${s.title}</span> 
+                <span style="color:var(--accent); margin-left:5px;">${s.bpm}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="edit-btn" onclick="editSong(${i})">EDIT</button>
+                <span style="color: #f04; cursor: pointer; font-family: 'Orbitron'; font-weight: bold; font-size: 0.8rem;" onclick="deleteSong(${i})">X</span>
+            </div>`;
+        ui.appendChild(item);
+    });
+}
     function toggleLab() { document.getElementById('lab-panel').classList.toggle('active'); renderLabList(); }
     function switchPlaylist(n) { db.activeList = n; currentIndex = 0; saveDB(); updateUI(); renderLabList(); }
     function createNewPlaylist() { const n = prompt("Nome lista:").toUpperCase(); if(n) { db.playlists[n] = []; switchPlaylist(n); renderPlaylistSelect(); } }
