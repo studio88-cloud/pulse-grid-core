@@ -271,12 +271,24 @@
     }
 }
     function togglePlay() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (isPlaying) { isPlaying = false; clearTimeout(timerID); } 
-        else { isPlaying = true; currentBeat = 0; nextTickTime = audioCtx.currentTime; scheduler(); }
-        document.getElementById('play-stop').innerText = isPlaying ? "STOP" : "ENGAGE";
-        document.getElementById('play-stop').classList.toggle('stop', isPlaying);
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
     }
+
+    if (isPlaying) { 
+        isPlaying = false; 
+        clearTimeout(timerID); 
+    } else { 
+        isPlaying = true; 
+        currentBeat = 0; 
+        nextTickTime = audioCtx.currentTime + 0.05; 
+        scheduler(); 
+    }
+    document.getElementById('play-stop').innerText = isPlaying ? "STOP" : "IGNITE";
+    document.getElementById('play-stop').classList.toggle('stop', isPlaying);
+}
 
     function scheduler() {
     const s = db.playlists[db.activeList][currentIndex];
