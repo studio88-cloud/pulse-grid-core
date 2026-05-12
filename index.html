@@ -21,7 +21,19 @@
         #bpm-val { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 7.5rem; line-height: 0.9; color: var(--accent); z-index: 2; }
         #time-sig-display { font-family: 'Orbitron'; font-size: 1.1rem; color: #555; margin-top: 10px; z-index: 2; }
         .next-label { font-family: 'Orbitron'; font-size: 0.75rem; color: #444; margin-top: 15px; z-index: 2; }
-        .live-display.flash-full { background: var(--accent); } .live-display.flash-full * { color: #000 !important; }
+        .live-display.flash-full { 
+    background: var(--accent) !important; 
+}
+
+.live-display.flash-full * { 
+    color: #000 !important; 
+}
+
+.live-display.flash-side {
+    box-shadow: inset 25px 0 40px -15px var(--accent), 
+                inset -25px 0 40px -15px var(--accent);
+    border-color: var(--accent);
+}
         .controls-row { display: flex; gap: 10px; height: 75px; margin: 15px 0; }
         .nav-btn { flex: 1; background: #1a1a1a; border: 1px solid #333; color: var(--accent); border-radius: 18px; font-family: 'Orbitron'; font-size: 0.6rem; cursor: pointer; }
         .play-btn { flex: 1.8; background: var(--accent); border: none; color: black; border-radius: 18px; font-family: 'Orbitron'; font-weight: 900; font-size: 1.1rem; cursor: pointer; }
@@ -170,24 +182,43 @@
     }
 
     function playClick(t, b, s) {
-        const osc = audioCtx.createOscillator(); const env = audioCtx.createGain();
-        let isAccent = (b === 0);
-        if (s.den === 8 && b % 3 === 0) isAccent = true;
-        if (s.den === 16 && b % 4 === 0) isAccent = true;
-        osc.frequency.setValueAtTime(b === 0 ? 1200 : (isAccent ? 800 : 400), t);
-        env.gain.setValueAtTime(b === 0 ? 0.4 : (isAccent ? 0.2 : 0.05), t);
-        env.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-        osc.connect(env); env.connect(audioCtx.destination);
-        osc.start(t); osc.stop(t + 0.05);
-        setTimeout(() => {
-            if (!isPlaying) return;
-            const d = document.getElementById('main-display');
-            if (isAccent) { d.classList.add(b===0?'flash-full':'flash-side'); setTimeout(()=>d.classList.remove('flash-full','flash-side'), 60); }
-            let dots = s.den === 8 ? Math.ceil(s.num/3) : (s.den === 16 ? Math.ceil(s.num/4) : s.num);
-            let vIdx = s.den === 8 ? Math.floor(b/3) : (s.den === 16 ? Math.floor(b/4) : b);
-            document.querySelectorAll('.beat-dot').forEach((dot, i) => dot.classList.toggle('active', i === vIdx));
-        }, (t - audioCtx.currentTime) * 1000);
-    }
+    const osc = audioCtx.createOscillator(); 
+    const env = audioCtx.createGain();
+    
+    let isAccent = (b === 0);
+    if (s.den === 8 && b % 3 === 0) isAccent = true;
+    if (s.den === 16 && b % 4 === 0) isAccent = true;
+
+    osc.frequency.setValueAtTime(b === 0 ? 1200 : (isAccent ? 800 : 400), t);
+    env.gain.setValueAtTime(b === 0 ? 0.4 : (isAccent ? 0.2 : 0.05), t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    
+    osc.connect(env); 
+    env.connect(audioCtx.destination);
+    osc.start(t); 
+    osc.stop(t + 0.05);
+
+    setTimeout(() => {
+        if (!isPlaying) return;
+        const d = document.getElementById('main-display');
+        
+        d.classList.remove('flash-full', 'flash-side');
+        
+        if (isAccent) {
+            d.classList.add('flash-full');
+        } else if (s.den !== 4) {
+            d.classList.add('flash-side');
+        }
+        
+        setTimeout(() => d.classList.remove('flash-full', 'flash-side'), 60);
+
+        let vIdx = s.den === 8 ? Math.floor(b/3) : (s.den === 16 ? Math.floor(b/4) : b);
+        const dots = document.querySelectorAll('.beat-dot');
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === vIdx);
+        });
+    }, (t - audioCtx.currentTime) * 1000);
+}
 
     function updateUI() {
     const list = db.playlists[db.activeList]; 
