@@ -215,7 +215,14 @@ function renderColorPalette() {
         p.appendChild(b);
     });
 }
-    window.onload = () => { renderPlaylistSelect(); updateUI(); setupBtn('btn-prev', prevSong); setupBtn('btn-next', nextSong); };
+    window.onload = () => { 
+    renderPlaylistSelect(); 
+    renderColorPalette(); // Aggiunta questa
+    setThemeColor(db.themeColor || "#bc13fe"); // Aggiunta questa
+    updateUI(); 
+    setupBtn('btn-prev', prevSong); 
+    setupBtn('btn-next', nextSong); 
+};
 </script>
 </body>
 </html>
