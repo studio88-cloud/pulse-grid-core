@@ -261,10 +261,15 @@
     function deleteCurrentPlaylist() { if(Object.keys(db.playlists).length <= 1) return; if(confirm(`Eliminare ${db.activeList}?`)) { delete db.playlists[db.activeList]; switchPlaylist(Object.keys(db.playlists)[0]); } }
 
     function handleTap() {
-        const now = Date.now(); tapTimes.push(now); if (tapTimes.length > 5) tapTimes.shift();
-        if (tapTimes.length > 1) { const avg = (tapTimes[tapTimes.length-1] - tapTimes[0]) / (tapTimes.length - 1); document.getElementById('new-bpm').value = Math.round(60000 / avg); }
+    const now = Date.now();
+    tapTimes.push(now);
+    if (tapTimes.length > 5) tapTimes.shift();
+    if (tapTimes.length > 1) {
+        const avg = (tapTimes[tapTimes.length - 1] - tapTimes[0]) / (tapTimes.length - 1);
+        let rb = 60000 / avg;
+        document.getElementById('new-bpm').value = Math.round(rb);
     }
-
+}
     function togglePlay() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (isPlaying) { isPlaying = false; clearTimeout(timerID); } 
@@ -274,15 +279,15 @@
     }
 
     function scheduler() {
-        const s = db.playlists[db.activeList][currentIndex];
-        let step = 60 / s.bpm;
-        if (s.den === 8) step /= 3; if (s.den === 16) step /= 4;
-        while (nextTickTime < audioCtx.currentTime + 0.1) {
-            playClick(nextTickTime, currentBeat, s);
-            nextTickTime += step;
-            currentBeat = (currentBeat + 1) % s.num;
-        }
-        timerID = setTimeout(scheduler, 25);
+    const s = db.playlists[db.activeList][currentIndex];
+    let step = 60 / s.bpm; 
+    
+    while (nextTickTime < audioCtx.currentTime + 0.1) {
+        playClick(nextTickTime, currentBeat, s);
+        nextTickTime += step;
+        currentBeat = (currentBeat + 1) % s.num;
+    }
+    timerID = setTimeout(scheduler, 25);
     }
 
     function playClick(t, b, s) {
