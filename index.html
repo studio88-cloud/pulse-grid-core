@@ -49,8 +49,7 @@
     </div>
     <div class="beat-counter" id="beat-counter"></div>
     <div class="live-display" id="main-display">
-        <div class="live-display" id="main-display">
-    <div id="playlist-label" style="font-family: 'Orbitron'; font-size: 0.65rem; color: var(--accent); margin-bottom: 15px; letter-spacing: 2px; opacity: 0.8;">--</div>
+        <div id="playlist-label" style="font-family: 'Orbitron'; font-size: 0.65rem; color: var(--accent); margin-bottom: 15px; letter-spacing: 2px; opacity: 0.8;">--</div>
         <div id="song-title">CHOOSE LIST</div>
         <div id="bpm-val">--</div>
         <div id="time-sig-display">--</div>
@@ -152,16 +151,26 @@
     }
 
     function updateUI() {
-        const list = db.playlists[db.activeList]; if(!list || list.length === 0) return;
-        const s = list[currentIndex];
-        document.getElementById('song-title').innerText = s.title;
-        document.getElementById('bpm-val').innerText = s.bpm;
-        document.getElementById('time-sig-display').innerText = `${s.num}/${s.den}`;
-        document.getElementById('next-song').innerText = list[currentIndex+1] ? list[currentIndex+1].title : "END";
-        const cnt = document.getElementById('beat-counter'); cnt.innerHTML = '';
-        let dots = s.den === 8 ? Math.ceil(s.num/3) : (s.den === 16 ? Math.ceil(s.num/4) : s.num);
-        for(let i=0; i<dots; i++) { const d = document.createElement('div'); d.className = 'beat-dot'; cnt.appendChild(d); }
+    const list = db.playlists[db.activeList]; 
+    if(!list || list.length === 0) return;
+    
+    document.getElementById('playlist-label').innerText = db.activeList;
+    
+    const s = list[currentIndex];
+    document.getElementById('song-title').innerText = s.title;
+    document.getElementById('bpm-val').innerText = s.bpm;
+    document.getElementById('time-sig-display').innerText = `${s.num}/${s.den}`;
+    document.getElementById('next-song').innerText = list[currentIndex+1] ? list[currentIndex+1].title : "END";
+    
+    const cnt = document.getElementById('beat-counter'); 
+    cnt.innerHTML = '';
+    let dots = s.den === 8 ? Math.ceil(s.num/3) : (s.den === 16 ? Math.ceil(s.num/4) : s.num);
+    for(let i=0; i<dots; i++) { 
+        const d = document.createElement('div'); 
+        d.className = 'beat-dot'; 
+        cnt.appendChild(d); 
     }
+}
 
     function addSong() {
         const t = document.getElementById('new-title').value.toUpperCase() || "UNTITLED", b = parseInt(document.getElementById('new-bpm').value) || 120, n = parseInt(document.getElementById('new-num').value) || 4, d = parseInt(document.getElementById('new-den').value) || 4;
