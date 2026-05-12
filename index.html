@@ -6,71 +6,38 @@
     <title>PULSE GRID CORE</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #050505; --card: #121212; --text: #f0f0f0;
-            --accent: #bc13fe; --accent-glow: rgba(188, 19, 254, 0.5);
-            --dot-base: #222;
-        }
+        :root { --bg: #050505; --card: #121212; --text: #f0f0f0; --accent: #bc13fe; --accent-glow: rgba(188, 19, 254, 0.5); --dot-base: #222; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-
-        .container {
-            width: 94%; max-width: 380px; background: var(--card); padding: 25px;
-            border-radius: 40px; text-align: center; border: 1px solid #222;
-            box-shadow: 0 30px 100px rgba(0,0,0,1); position: relative; height: 750px;
-            display: flex; flex-direction: column; justify-content: space-between;
-        }
-
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .container { width: 94%; max-width: 380px; background: var(--card); padding: 25px; border-radius: 40px; text-align: center; border: 1px solid #222; box-shadow: 0 30px 100px rgba(0,0,0,1); position: relative; height: 750px; display: flex; flex-direction: column; justify-content: space-between; }
+        .header { display: flex; justify-content: space-between; align-items: center; }
         h1 { color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 1rem; margin: 0; text-shadow: 0 0 10px var(--accent-glow); line-height: 1.1; text-align: left; }
         .lab-toggle { background: #1a1a1a; border: 1px solid #333; color: var(--accent); padding: 8px 15px; border-radius: 12px; font-family: 'Orbitron'; font-size: 0.6rem; cursor: pointer; }
-
         .beat-counter { display: flex; justify-content: center; align-items: center; gap: 14px; margin: 10px 0; min-height: 40px; }
         .beat-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--dot-base); transition: 0.1s; border: 2px solid #333; }
         .beat-dot.active { background: var(--accent); box-shadow: 0 0 15px var(--accent-glow); transform: scale(1.2); border-color: #fff; }
-
-        .live-display { 
-            background: #000; width: 100%; border-radius: 35px; border: 2px solid #1a1a1a; 
-            padding: 20px; transition: 0.07s ease-out; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            margin: 5px 0; position: relative; overflow: hidden; flex-grow: 1;
-        }
-        #song-title { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; color: #aaa; margin-bottom: 5px; text-transform: uppercase; z-index: 2; letter-spacing: 1px; }
+        .live-display { background: #000; width: 100%; border-radius: 35px; border: 2px solid #1a1a1a; padding: 20px; transition: 0.07s ease-out; display: flex; flex-direction: column; justify-content: center; align-items: center; flex-grow: 1; position: relative; overflow: hidden; }
+        #song-title { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; color: #aaa; margin-bottom: 5px; text-transform: uppercase; z-index: 2; }
         #bpm-val { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 7.5rem; line-height: 0.9; color: var(--accent); z-index: 2; }
-        #time-sig-display { font-family: 'Orbitron'; font-size: 1.1rem; color: #555; margin-top: 10px; letter-spacing: 4px; z-index: 2; }
-        .next-label { font-family: 'Orbitron'; font-size: 0.75rem; color: #444; margin-top: 15px; letter-spacing: 1.5px; z-index: 2; }
-
-        .live-display.flash-full { background: var(--accent); border-color: #fff; }
-        .live-display.flash-full * { color: #000 !important; }
-        .live-display::before, .live-display::after {
-            content: ''; position: absolute; top: 0; width: 14px; height: 100%;
-            background: var(--accent); opacity: 0; transition: 0.07s; border-radius: 35px;
-        }
-        .live-display::before { left: -2px; } .live-display::after { right: -2px; }
-        .live-display.flash-side::before, .live-display.flash-side::after { opacity: 1; }
-
-        .controls-row { display: flex; gap: 10px; height: 75px; margin: 15px 0 10px 0; }
+        #time-sig-display { font-family: 'Orbitron'; font-size: 1.1rem; color: #555; margin-top: 10px; z-index: 2; }
+        .next-label { font-family: 'Orbitron'; font-size: 0.75rem; color: #444; margin-top: 15px; z-index: 2; }
+        .live-display.flash-full { background: var(--accent); } .live-display.flash-full * { color: #000 !important; }
+        .controls-row { display: flex; gap: 10px; height: 75px; margin: 15px 0; }
         .nav-btn { flex: 1; background: #1a1a1a; border: 1px solid #333; color: var(--accent); border-radius: 18px; font-family: 'Orbitron'; font-size: 0.6rem; cursor: pointer; }
         .play-btn { flex: 1.8; background: var(--accent); border: none; color: black; border-radius: 18px; font-family: 'Orbitron'; font-weight: 900; font-size: 1.1rem; cursor: pointer; }
         .play-btn.stop { background: #000 !important; color: var(--accent) !important; border: 2px solid var(--accent); }
-
-        .color-palette { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; padding-bottom: 5px; }
-        .color-box { width: 26px; height: 26px; border-radius: 7px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
-        .color-box.active { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
-
-        #lab-panel {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--card); border-radius: 40px; padding: 20px;
-            display: none; flex-direction: column; z-index: 100;
-        }
+        .color-palette { display: flex; justify-content: center; gap: 10px; margin-bottom: 5px; }
+        .color-box { width: 26px; height: 26px; border-radius: 7px; cursor: pointer; border: 2px solid transparent; }
+        .color-box.active { border-color: #fff; }
+        #lab-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--card); border-radius: 40px; padding: 20px; display: none; flex-direction: column; z-index: 100; }
         #lab-panel.active { display: flex; }
         .lab-input { background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 10px; margin-bottom: 6px; font-family: 'Inter'; width: 100%; font-size: 0.8rem; }
-        .row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
-        .playlist-manager { background: #1a1a1a; padding: 10px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #333; }
-        .playlist-ctrl { display: flex; gap: 5px; margin-top: 8px; }
-        .pl-btn { flex: 1; padding: 8px; font-size: 0.55rem; font-family: 'Orbitron'; cursor: pointer; border-radius: 5px; border: 1px solid #444; background: #222; color: #ccc; }
-        #song-list-ui { flex-grow: 1; overflow-y: auto; text-align: left; margin-top: 10px; padding-right: 5px; }
-        .song-item { background: #111; padding: 12px; border-radius: 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; border: 1px solid #222; }
-        .edit-btn { color: var(--accent); background: none; border: 1px solid var(--accent); padding: 4px 8px; border-radius: 5px; font-size: 0.55rem; font-family: 'Orbitron'; cursor: pointer; }
+        .row { display: flex; gap: 8px; margin-bottom: 6px; }
+        .playlist-manager { background: #1a1a1a; padding: 10px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #333; }
+        .playlist-ctrl { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+        .pl-btn { flex: 1; padding: 8px; font-size: 0.55rem; font-family: 'Orbitron'; cursor: pointer; border-radius: 5px; border: 1px solid #444; background: #222; color: #ccc; min-width: 70px; }
+        #song-list-ui { flex-grow: 1; overflow-y: auto; margin-top: 10px; }
+        .song-item { background: #111; padding: 10px; border-radius: 10px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; border: 1px solid #222; }
     </style>
 </head>
 <body>
@@ -80,61 +47,51 @@
         <h1>PULSE GRID<br><span style="font-size:0.6rem; opacity:0.6">CORE</span></h1>
         <button class="lab-toggle" onclick="toggleLab()">LAB</button>
     </div>
-
     <div class="beat-counter" id="beat-counter"></div>
-
     <div class="live-display" id="main-display">
         <div id="song-title">CHOOSE LIST</div>
         <div id="bpm-val">--</div>
         <div id="time-sig-display">--</div>
-        <div class="next-label">NEXT: <span id="next-song" style="color:#666">--</span></div>
+        <div class="next-label">NEXT: <span id="next-song">--</span></div>
     </div>
-
     <div class="controls-row">
         <button id="btn-prev" class="nav-btn">PREV</button>
         <button id="play-stop" class="play-btn" onclick="togglePlay()">IGNITE</button>
         <button id="btn-next" class="nav-btn">NEXT</button>
     </div>
-
     <div class="color-palette" id="color-palette"></div>
-
     <div id="lab-panel">
         <div style="display:flex; justify-content:space-between; font-family:Orbitron; color:var(--accent); margin-bottom:10px;">
             <span>MANAGER</span>
             <button onclick="toggleLab()" style="background:none; border:none; color:#fff; cursor:pointer;">CLOSE</button>
         </div>
-        
         <div class="playlist-manager">
-            <select id="pl-select" class="lab-input" style="margin:0;" onchange="switchPlaylist(this.value)"></select>
+            <select id="pl-select" class="lab-input" onchange="switchPlaylist(this.value)"></select>
             <div class="playlist-ctrl">
                 <button class="pl-btn" onclick="createNewPlaylist()">NEW LIST</button>
                 <button class="pl-btn" style="color:#f04" onclick="deleteCurrentPlaylist()">DEL LIST</button>
             </div>
         </div>
-
-        <input type="text" id="new-title" class="lab-input" placeholder="TITOLO BRANO">
+        <input type="text" id="new-title" class="lab-input" placeholder="TITOLO">
         <div class="row">
-            <input type="number" id="new-bpm" class="lab-input" placeholder="BPM" style="margin:0; flex:2;">
-            <button class="pl-btn" style="height:35px;" onclick="handleTap()">TAP</button>
+            <input type="number" id="new-bpm" class="lab-input" placeholder="BPM" style="flex:2;">
+            <button class="pl-btn" onclick="handleTap()">TAP</button>
         </div>
         <div class="row">
-            <input type="number" id="new-num" class="lab-input" value="4" style="margin:0; text-align:center;">
-            <span style="font-family:Orbitron; color:#444;">/</span>
-            <select id="new-den" class="lab-input" style="margin:0;">
-                <option value="4">4</option>
-                <option value="8">8</option>
-                <option value="16">16</option>
+            <input type="number" id="new-num" class="lab-input" value="4">
+            <select id="new-den" class="lab-input">
+                <option value="4">/ 4</option>
+                <option value="8">/ 8</option>
+                <option value="16">/ 16</option>
             </select>
         </div>
         <button id="save-btn" onclick="addSong()" style="width:100%; padding:12px; background:var(--accent); border:none; border-radius:10px; font-family:Orbitron; font-weight:900; cursor:pointer;">SAVE SONG</button>
-        
-        <div class="playlist-ctrl" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 15px; gap: 5px; flex-wrap: wrap;">
-            <button class="pl-btn" style="color: #00e676; border-color: #00e676;" onclick="shareCurrentPlaylist()">SHARE LIST</button>
-            <button class="pl-btn" onclick="exportData()">EXPORT BACKUP</button>
-            <button class="pl-btn" onclick="document.getElementById('import-file').click()">IMPORT FILE</button>
+        <div class="playlist-ctrl" style="margin-top:10px;">
+            <button class="pl-btn" style="color:#00e676;" onclick="shareCurrentPlaylist()">SHARE</button>
+            <button class="pl-btn" onclick="exportData()">BACKUP</button>
+            <button class="pl-btn" onclick="document.getElementById('import-file').click()">IMPORT</button>
             <input type="file" id="import-file" style="display:none" onchange="importData(event)">
         </div>
-
         <div id="song-list-ui"></div>
     </div>
 </div>
@@ -146,6 +103,89 @@
         themeColor: "#bc13fe"
     };
 
-    const colors = [
-        { name: 'white', hex: '#ffffff' }, { name: 'yellow', hex: '#ffeb3b' },
-        { name: 'green', hex: '#4caf50' }, { name
+    let isPlaying = false, audioCtx = null, timerID = null, nextTickTime = 0, currentBeat = 0, currentIndex = 0, editIndex = -1, tapTimes = [], repeatInterval = null;
+
+    function saveDB() { localStorage.setItem('pulse_db', JSON.stringify(db)); }
+
+    function togglePlay() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (isPlaying) { isPlaying = false; clearTimeout(timerID); } 
+        else { isPlaying = true; currentBeat = 0; nextTickTime = audioCtx.currentTime + 0.05; scheduler(); }
+        document.getElementById('play-stop').innerText = isPlaying ? "STOP" : "IGNITE";
+        document.getElementById('play-stop').classList.toggle('stop', isPlaying);
+    }
+
+    function scheduler() {
+        const s = db.playlists[db.activeList][currentIndex];
+        if(!s) return;
+        let step = 60 / s.bpm; 
+        while (nextTickTime < audioCtx.currentTime + 0.1) {
+            playClick(nextTickTime, currentBeat, s);
+            nextTickTime += step;
+            currentBeat = (currentBeat + 1) % s.num;
+        }
+        timerID = setTimeout(scheduler, 25);
+    }
+
+    function playClick(t, b, s) {
+        const osc = audioCtx.createOscillator(); const env = audioCtx.createGain();
+        let isAccent = (b === 0);
+        if (s.den === 8 && b % 3 === 0) isAccent = true;
+        if (s.den === 16 && b % 4 === 0) isAccent = true;
+        osc.frequency.setValueAtTime(b === 0 ? 1200 : (isAccent ? 800 : 400), t);
+        env.gain.setValueAtTime(b === 0 ? 0.4 : (isAccent ? 0.2 : 0.05), t);
+        env.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+        osc.connect(env); env.connect(audioCtx.destination);
+        osc.start(t); osc.stop(t + 0.05);
+        setTimeout(() => {
+            if (!isPlaying) return;
+            const d = document.getElementById('main-display');
+            if (isAccent) { d.classList.add(b===0?'flash-full':'flash-side'); setTimeout(()=>d.classList.remove('flash-full','flash-side'), 60); }
+            let dots = s.den === 8 ? Math.ceil(s.num/3) : (s.den === 16 ? Math.ceil(s.num/4) : s.num);
+            let vIdx = s.den === 8 ? Math.floor(b/3) : (s.den === 16 ? Math.floor(b/4) : b);
+            document.querySelectorAll('.beat-dot').forEach((dot, i) => dot.classList.toggle('active', i === vIdx));
+        }, (t - audioCtx.currentTime) * 1000);
+    }
+
+    function updateUI() {
+        const list = db.playlists[db.activeList]; if(!list || list.length === 0) return;
+        const s = list[currentIndex];
+        document.getElementById('song-title').innerText = s.title;
+        document.getElementById('bpm-val').innerText = s.bpm;
+        document.getElementById('time-sig-display').innerText = `${s.num}/${s.den}`;
+        document.getElementById('next-song').innerText = list[currentIndex+1] ? list[currentIndex+1].title : "END";
+        const cnt = document.getElementById('beat-counter'); cnt.innerHTML = '';
+        let dots = s.den === 8 ? Math.ceil(s.num/3) : (s.den === 16 ? Math.ceil(s.num/4) : s.num);
+        for(let i=0; i<dots; i++) { const d = document.createElement('div'); d.className = 'beat-dot'; cnt.appendChild(d); }
+    }
+
+    function addSong() {
+        const t = document.getElementById('new-title').value.toUpperCase() || "UNTITLED", b = parseInt(document.getElementById('new-bpm').value) || 120, n = parseInt(document.getElementById('new-num').value) || 4, d = parseInt(document.getElementById('new-den').value) || 4;
+        if(editIndex > -1) db.playlists[db.activeList][editIndex] = { title:t, bpm:b, num:n, den:d };
+        else db.playlists[db.activeList].push({ title:t, bpm:b, num:n, den:d });
+        saveDB(); editIndex = -1; document.getElementById('save-btn').innerText = "SAVE SONG"; renderLabList(); updateUI();
+    }
+
+    function editSong(i) { editIndex = i; const s = db.playlists[db.activeList][i]; document.getElementById('new-title').value = s.title; document.getElementById('new-bpm').value = s.bpm; document.getElementById('new-num').value = s.num; document.getElementById('new-den').value = s.den; document.getElementById('save-btn').innerText = "UPDATE"; }
+    function deleteSong(i) { if(confirm("Elimina?")) { db.playlists[db.activeList].splice(i,1); saveDB(); renderLabList(); updateUI(); } }
+    function renderLabList() { const ui = document.getElementById('song-list-ui'); ui.innerHTML = ''; db.playlists[db.activeList].forEach((s, i) => { const item = document.createElement('div'); item.className = 'song-item'; item.innerHTML = `<div>${s.title} <b>${s.bpm}</b></div><div><button onclick="editSong(${i})">ED</button><button onclick="deleteSong(${i})" style="color:red">X</button></div>`; ui.appendChild(item); }); }
+    function toggleLab() { document.getElementById('lab-panel').classList.toggle('active'); renderLabList(); }
+    function switchPlaylist(n) { db.activeList = n; currentIndex = 0; saveDB(); updateUI(); renderLabList(); }
+    function createNewPlaylist() { const n = prompt("Nome lista:").toUpperCase(); if(n) { db.playlists[n] = []; switchPlaylist(n); renderPlaylistSelect(); } }
+    function renderPlaylistSelect() { const sel = document.getElementById('pl-select'); sel.innerHTML = ''; Object.keys(db.playlists).forEach(name => { const opt = document.createElement('option'); opt.value = name; opt.innerText = name; opt.selected = (name === db.activeList); sel.appendChild(opt); }); }
+    function nextSong() { if(currentIndex < db.playlists[db.activeList].length - 1) { currentIndex++; if(isPlaying) { nextTickTime = audioCtx.currentTime; currentBeat = 0; } updateUI(); } }
+    function prevSong() { if(currentIndex > 0) { currentIndex--; if(isPlaying) { nextTickTime = audioCtx.currentTime; currentBeat = 0; } updateUI(); } }
+    function handleTap() { const now = Date.now(); tapTimes.push(now); if (tapTimes.length > 5) tapTimes.shift(); if (tapTimes.length > 1) { const avg = (tapTimes[tapTimes.length-1] - tapTimes[0]) / (tapTimes.length - 1); document.getElementById('new-bpm').value = Math.round(60000 / avg); } }
+    function exportData() { download(db, "BACKUP.json"); }
+    function shareCurrentPlaylist() { download({type:"PULSE_SHARE", name:db.activeList, songs:db.playlists[db.activeList]}, "SHARE.json"); }
+    function download(data, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:'application/json'})); a.download = name; a.click(); }
+    function importData(e) { const reader = new FileReader(); reader.onload = (ev) => { const imp = JSON.parse(ev.target.result); if(imp.type === "PULSE_SHARE") { let n = imp.name; if(db.playlists[n]) n+="_NEW"; db.playlists[n]=imp.songs; db.activeList=n; } else { db = imp; } saveDB(); location.reload(); }; reader.readAsText(e.target.files[0]); }
+    
+    // Auto-Repeat Setup
+    const setupBtn = (id, act) => { const b = document.getElementById(id); b.onmousedown = b.ontouchstart = (e) => { e.preventDefault(); if(isPlaying) act(); else { act(); repeatInterval = setInterval(act, 200); } }; b.onmouseup = b.onmouseleave = b.ontouchend = () => clearInterval(repeatInterval); };
+    
+    window.onload = () => { renderPlaylistSelect(); updateUI(); setupBtn('btn-prev', prevSong); setupBtn('btn-next', nextSong); };
+</script>
+</body>
+</html>
