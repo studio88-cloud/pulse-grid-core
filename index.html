@@ -133,6 +133,11 @@
         </div>
         <button id="save-btn" onclick="addSong()" style="width:100%; padding:12px; background:var(--accent); border:none; border-radius:10px; font-family:Orbitron; font-weight:900; color:#000; cursor:pointer;">SAVE</button>
         <div id="song-list-ui" class="playlist-container"></div>
+        <div class="playlist-ctrl" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 15px;">
+    <button class="pl-btn" onclick="exportData()">ESPORTA BACKUP</button>
+    <button class="pl-btn" onclick="document.getElementById('import-file').click()">IMPORTA BACKUP</button>
+    <input type="file" id="import-file" style="display:none" onchange="importData(event)">
+</div>
     </div>
 </div>
 
@@ -155,7 +160,42 @@
 
     function initApp() { renderPlaylistSelect(); renderColorPalette(); setThemeColor(db.themeColor); updateUI(); initUniversalSortable(); }
     function saveDB() { localStorage.setItem('pulse_db', JSON.stringify(db)); }
+function exportData() {
+    const dataStr = JSON.stringify(db, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = 'pulse_backup_' + new Date().toISOString().slice(0,10) + '.json';
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+}
 
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedDb = JSON.parse(e.target.result);
+            // Verifica base che il file sia corretto
+            if (importedDb.playlists && importedDb.activeList) {
+                if (confirm("Attenzione: l'importazione sovrascriverà tutte le playlist attuali. Procedere?")) {
+                    db = importedDb;
+                    saveDB();
+                    location.reload(); // Ricarica l'app per applicare i nuovi dati
+                }
+            } else {
+                alert("File di backup non valido.");
+            }
+        } catch (err) {
+            alert("Errore durante l'importazione: " + err);
+        }
+    };
+    reader.readAsText(file);
+}
     function initUniversalSortable() {
         const liste = document.querySelectorAll('.playlist-container');
         liste.forEach(lista => {
